@@ -11,7 +11,7 @@ const clickOnPlaceDetail = async (page, link) => {
     await sleep(1000);
 };
 
-const enqueueAllUrlsFromPagination = async (page, requestQueue, searchString, paginationFrom, maxPlacesPerCrawl) => {
+const enqueueAllUrlsFromPagination = async (page, requestQueue, searchString, paginationFrom, maxPlacesPerCrawl, justLinks) => {
     let results = await page.$$('.section-result');
     const resultsCount = results.length;
     const searchBoxSelector = '.searchbox';
@@ -41,8 +41,14 @@ const enqueueAllUrlsFromPagination = async (page, requestQueue, searchString, pa
         const uniqueKey = placeName + plusCode;
         log.debug(`${url} with uniqueKey ${uniqueKey} is adding to queue.`);
         const rank = paginationFrom + resultIndex;
-        await requestQueue.addRequest({ url, uniqueKey, userData: { label: 'detail', searchString, shownAsAd, rank } }, { forefront: true });
-        log.info(`Added place detail to queue, url: ${url}, with rank ${rank}`);
+        const newRequest = { url, uniqueKey, userData: { label: 'detail', searchString, shownAsAd, rank } };
+        if (justLinks) {
+            await Apify.pushData(newRequest);
+            log.info(`Store request in dataset, url: ${url}, with rank ${rank}`);
+        } else {
+            await requestQueue.addRequest(newRequest, { forefront: true });
+            log.info(`Added place detail to queue, url: ${url}, with rank ${rank}`);
+        }
         if (maxPlacesPerCrawl && paginationFrom + resultIndex + 1 > maxPlacesPerCrawl) {
             log.info(`Reach max places per search ${maxPlacesPerCrawl}, stopped enqueuing new places.`);
             return true;
@@ -70,7 +76,7 @@ const enqueueAllUrlsFromPagination = async (page, requestQueue, searchString, pa
  * @param requestQueue
  * @param maxPlacesPerCrawl
  */
-const enqueueAllPlaceDetails = async (page, searchString, requestQueue, maxPlacesPerCrawl, request) => {
+const enqueueAllPlaceDetails = async (page, searchString, requestQueue, maxPlacesPerCrawl, request, justLinks) => {
     // Save state of listing pagination
     // NOTE: If pageFunction failed crawler skipped already scraped pagination
     const listingStateKey = `${LISTING_PAGINATION_KEY}-${request.id}`;
@@ -109,7 +115,7 @@ const enqueueAllPlaceDetails = async (page, searchString, requestQueue, maxPlace
             log.debug(`Skiped pagination ${from} - ${to}, already done!`);
         } else {
             log.debug(`Added links from pagination ${from} - ${to}`);
-            isFinished = await enqueueAllUrlsFromPagination(page, requestQueue, searchString, from, maxPlacesPerCrawl);
+            isFinished = await enqueueAllUrlsFromPagination(page, requestQueue, searchString, from, maxPlacesPerCrawl, justLinks);
             listingPagination.from = from;
             listingPagination.to = to;
             await Apify.setValue(listingStateKey, listingPagination);

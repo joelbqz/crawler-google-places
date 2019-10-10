@@ -7,7 +7,8 @@ const { log } = Apify.utils;
 Apify.main(async () => {
     const input = await Apify.getValue('INPUT');
     const { searchString, searchStringsArray, proxyConfig, lat, lng, maxCrawledPlaces, regularTestRun,
-        includeReviews = true, includeImages = true, includeHistogram = true, includeOpeningHours = true, walker } = input;
+        includeReviews = true, includeImages = true, includeHistogram = true,
+        includeOpeningHours = true, walker } = input;
 
     if (!searchString && !searchStringsArray) throw new Error('Attribute searchString or searchStringsArray is missing in input.');
     if (proxyConfig && proxyConfig.apifyProxyGroups

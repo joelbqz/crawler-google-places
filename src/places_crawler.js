@@ -273,7 +273,7 @@ const setUpCrawler = (launchPuppeteerOptions, requestQueue, maxCrawledPlaces, in
                 }
                 if (label === 'startUrl') {
                     log.info(`Start enqueuing places details for search: ${searchString}`);
-                    await enqueueAllPlaceDetails(page, searchString, requestQueue, maxCrawledPlaces, request);
+                    await enqueueAllPlaceDetails(page, searchString, requestQueue, maxCrawledPlaces, request, input.justLinks);
                     log.info('Enqueuing places finished.');
                 } else {
                     // Get data for place and save it to dataset
